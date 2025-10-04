@@ -1,9 +1,7 @@
 from typing import List, Dict, Any
-from datetime import datetime
 import numpy as np
 import yfinance as yf
 import logging
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +16,8 @@ class NewsRanker:
         logger.info(f"🎯 Топ-кластеры ранжированы, макс hotness: {ranked[0]['hotness'] if ranked else 0}")
         return ranked
 
-    def _calculate_hotness(self, cluster: Dict[str, Any]) -> float:
+    @staticmethod
+    def _calculate_hotness(cluster: Dict[str, Any]) -> float:
         cluster_list = cluster.get('cluster', [])
         if not cluster_list:
             return 0.0
@@ -38,7 +37,8 @@ class NewsRanker:
                 if len(data) >= 2:
                     change = (data['Close'][-1] - data['Close'][-2]) / data['Close'][-2]
                     impact = abs(change)
-            except:
+            except (ValueError, KeyError, IndexError) as e:
+                logger.warning(f"yfinance ошибка для {ticker}: {e}")
                 pass
 
         hotness = 0.5 * velocity / 10 + 0.3 * (avg_sentiment + 1) / 2 + 0.2 * impact

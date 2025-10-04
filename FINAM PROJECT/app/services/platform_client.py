@@ -1,7 +1,7 @@
 import aiohttp
 import asyncio
 from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.core.config import settings
 from app.models.schemas import TimeWindow
 from aiohttp_retry import RetryClient
@@ -39,9 +39,9 @@ class PlatformClient:
         try:
             params = {
                 "start_time": time_window.start_time.isoformat() if time_window.start_time else
-                (datetime.utcnow() - timedelta(hours=time_window.hours)).isoformat(),
+                (datetime.now(timezone.utc) - timedelta(hours=time_window.hours)).isoformat(),
                 "end_time": time_window.end_time.isoformat() if time_window.end_time else
-                datetime.utcnow().isoformat(),
+                datetime.now(timezone.utc).isoformat(),
                 "limit": settings.MAX_NEWS_PER_SOURCE,
                 "language": "en,ru"
             }
@@ -99,19 +99,20 @@ class PlatformClient:
 
         return normalized_news
 
-    def _parse_datetime(self, dt_str: Any) -> datetime:
+    @staticmethod
+    def _parse_datetime(dt_str: Any) -> datetime:
         if isinstance(dt_str, datetime):
             return dt_str
 
         if not dt_str:
-            return datetime.utcnow()
+            return datetime.now(timezone.utc)
 
         try:
             for fmt in ["%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d %H:%M:%S"]:
                 try:
-                    return datetime.strptime(dt_str, fmt)
+                    return datetime.strptime(dt_str, fmt).replace(tzinfo=timezone.utc)
                 except ValueError:
                     continue
-            return datetime.utcnow()
-        except:
-            return datetime.utcnow()
+            return datetime.now(timezone.utc)
+        except (ValueError, TypeError):
+            return datetime.now(timezone.utc)

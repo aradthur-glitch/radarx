@@ -21,6 +21,12 @@ class Settings(BaseSettings):
 
     NEWS_SOURCES: List[str] = ["https://api.reuters.com", "https://api.bloomberg.com"]
 
+    RSS_FEEDS: List[str] = [
+        "https://feeds.reuters.com/reuters/businessNews",
+        "https://feeds.reuters.com/reuters/technologyNews",
+        "https://www.bloomberg.com/feed/rss/markets.rss"
+    ]
+
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 

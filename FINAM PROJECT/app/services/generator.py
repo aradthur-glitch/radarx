@@ -1,6 +1,5 @@
-from typing import Dict, Any, List
+from typing import Dict, Any
 from app.models.schemas import NewsEvent, Source, Timeline
-from datetime import datetime
 import openai
 import logging
 from app.core.config import settings
@@ -11,7 +10,8 @@ openai.api_key = settings.LLM_API_KEY
 
 
 class DraftGenerator:
-    async def generate_event(self, ranked_cluster: Dict[str, Any]) -> NewsEvent:
+    @staticmethod
+    async def generate_event(ranked_cluster: Dict[str, Any]) -> NewsEvent:
         cluster = ranked_cluster['cluster']['cluster']
         hotness = ranked_cluster['hotness']
         entities = ranked_cluster['cluster']['entities']
@@ -31,7 +31,8 @@ class DraftGenerator:
                 max_tokens=150
             )
             llm_text = response.choices[0].message.content
-            draft = {"headline": "Generated Headline: Market Shift", "why_now": "Due to recent earnings."}
+            draft = {"headline": llm_text[:50] + "...",
+                     "why_now": llm_text[50:100] + "..."}  # Простой парсинг; улучши json.loads в prod
         except Exception as e:
             logger.error(f"LLM ошибка: {e}")
             draft = {"headline": cluster[0]['title'], "why_now": "Hot event detected"}
