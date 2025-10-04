@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.models.schemas import TimeWindow, RadarResponse
 from app.services.pipeline import RadarPipeline
-from app.core.config import settings
 from app.api.endpoints import router as api_router
 
 app = FastAPI(

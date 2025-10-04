@@ -2,7 +2,6 @@ from typing import List, Dict, Any
 import spacy
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import DBSCAN
-import numpy as np
 import re
 import logging
 from app.core.config import settings
@@ -28,7 +27,8 @@ class NewsProcessor:
             text = news.get('title', '') + ' ' + news.get('content', '')
             if self.nlp:
                 doc = self.nlp(text)
-                entities = [ent.text for ent in doc.ents if ent.label_ in ['ORG', 'MONEY', 'NORP', 'PRODUCT']]
+                entities = [ent.text for ent in doc.ents if ent.label_ in ['ORG', 'MONEY', 'NORP',
+                                                                           'PRODUCT']]  # NORP: Nationalities/religious groups (spaCy label)
                 tickers = re.findall(r'\b[A-Z]{1,5}\b', text)
                 entities.extend(tickers)
                 news['entities'] = list(set(entities))
@@ -43,7 +43,7 @@ class NewsProcessor:
         clustering = DBSCAN(eps=0.4, min_samples=2, metric='cosine').fit(embeddings)
 
         clusters = {}
-        for idx, label in enumerate(clustering.labels_):
+        for idx, label in enumerate(clustering.labels_):  # type: ignore  # DBSCAN.labels_ from sklearn
             if label == -1:
                 label = f"singleton_{idx}"
             if label not in clusters:
